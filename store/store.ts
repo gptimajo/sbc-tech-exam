@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import recipesSlice from '../slices/recipesSlice';
 import searchSlice from '../slices/searchSlice';
 import toastSlice from '../slices/toastSlice';
+import favoritesSlice from '../slices/favoritesSlice';
 
 export function makeStore() {
     return configureStore({
@@ -9,6 +10,7 @@ export function makeStore() {
             recipes: recipesSlice,
             search: searchSlice,
             toast: toastSlice,
+            favorites: favoritesSlice,
         // Add your reducers here
         },
         devTools: process.env.NODE_ENV !== 'production',

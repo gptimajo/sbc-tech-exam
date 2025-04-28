@@ -3,12 +3,15 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import { AppDispatch } from "../../store/store";
 import { selectSearch } from "../../slices/searchSlice";
 import { fetchRecipes, clearRecipes, selectRecipes, selectRecipesLoading, selectRecipesError } from "../../slices/recipesSlice";
-import { AppDispatch } from "../../store/store";
+import { selectFavorites, addFavorite, removeFavorite } from "../../slices/favoritesSlice";
 
-import { CircularProgress, List, Grid, Card, CardMedia, CardHeader, CardContent, Select, MenuItem, SelectChangeEvent, FormGroup, FormControlLabel, Checkbox, Fab, CardActionArea, styled } from "@mui/material";
+import { CircularProgress, List, Grid, Card, CardMedia, CardHeader, CardContent, Select, MenuItem, SelectChangeEvent, FormGroup, FormControlLabel, Checkbox, Fab, CardActionArea, styled, Button, IconButton } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 
 enum SortOrder {
   ASC = 'asc',
@@ -23,11 +26,12 @@ export default function Home() {
   const loading = useSelector(selectRecipesLoading);
   const error = useSelector(selectRecipesError);
   const search = useSelector(selectSearch);
+  const favorites = useSelector(selectFavorites);
 
   const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.ASC);
-  const [sortedRecipes, setSortedRecipes] = useState(recipes);
-
-  console.log({recipes, loading, error})
+  const [filteredRecipes, setFilteredRecipes] = useState(recipes);
+  const [sortedRecipes, setSortedRecipes] = useState(filteredRecipes);
+  const [showFavorites, setShowFavorites] = useState<boolean|undefined>();
 
   const clearAllRecipes = useCallback(() => dispatch(clearRecipes()),[dispatch]);
 
@@ -49,22 +53,64 @@ export default function Home() {
   }, [fetchAllRecipes, search]);
 
   useEffect(() => {
-    if (recipes) {
-      setSortedRecipes([...recipes].sort((a, b) => {
+    if (filteredRecipes) {
+      setSortedRecipes([...filteredRecipes].sort((a, b) => {
         if(sortOrder === SortOrder.ASC) {
-          return a.title < b.title ? -1 : 1;
+          return a.title.toLowerCase() == b.title.toLowerCase() ? 0 : a.title.toLowerCase() < b.title.toLowerCase() ? -1 : 1;
         }
         if(sortOrder === SortOrder.DESC) {
-          return a.title > b.title ? -1 : 1;
+          return a.title.toLowerCase() == b.title.toLowerCase() ? 0 : a.title.toLowerCase() > b.title.toLowerCase() ? -1 : 1;
         }
         return 0;
       }));
     }
-  },[recipes, sortOrder]);
+  },[filteredRecipes, sortOrder]);
+
+  useEffect(() => {
+    if(recipes){
+      if(showFavorites !== undefined) {
+        if(showFavorites === true) {
+          setFilteredRecipes([...recipes].filter((recipe) => favorites.includes(Number(recipe.id))));
+        }
+        else if(showFavorites === false) {
+          setFilteredRecipes([...recipes].filter((recipe) => !favorites.includes(Number(recipe.id))));
+        }
+      }
+      else {
+        setFilteredRecipes(recipes);
+      }
+    }
+    else {
+      setFilteredRecipes([]);
+    }
+  },[favorites, recipes, showFavorites]);
 
   const handleChange = (event: SelectChangeEvent<SortOrder>) => {
     setSortOrder(event.target.value as SortOrder);
   };
+
+  const handleFavorite = (id: number, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+      if (favorites.includes(id)) {
+        dispatch(removeFavorite(id));
+      } else {
+        dispatch(addFavorite(id));
+      }
+  };
+
+  const handleFavoriteFilter = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const value = (e.target as HTMLInputElement).value;
+    const checked = (e.target as HTMLInputElement).checked;
+
+    if(value === 'Yes') {
+      setShowFavorites(checked ? true: undefined);
+    } else if (value === 'No') {
+      setShowFavorites(checked ? false : undefined);
+    }
+    else {
+      setShowFavorites(undefined);
+    }
+  }
 
   return (<Grid container spacing={2} style={{padding: '10px'}}>
     <Grid size={3}>
@@ -82,8 +128,8 @@ export default function Home() {
             <CardHeader>Favorites</CardHeader>
             <CardContent>
               <FormGroup>
-              <FormControlLabel control={<Checkbox value="Yes" />} label="Yes" />
-              <FormControlLabel control={<Checkbox value="No" />} label="No" />
+                <FormControlLabel control={<Checkbox value="Yes" checked={showFavorites === true} onClick={handleFavoriteFilter} />} label="Yes" />
+                <FormControlLabel control={<Checkbox value="No" checked={showFavorites === false}  onClick={handleFavoriteFilter} />} label="No" />
               </FormGroup>
             </CardContent>
           </Card>
@@ -101,7 +147,12 @@ export default function Home() {
               <ItemCard key={recipe.id}>
                 <CardActionArea onClick={() => router.push(`/recipe/${recipe.id}`)}>
                   <Grid container>
-                    <Grid size={4}><CardMedia sx={{height:260}} component="img" src={recipe.image} style={{borderRadius:'10px'}} /></Grid>
+                    <Grid size={4} style={{position: 'relative'}}>
+                      <FavoriteButton onClick={(e) => handleFavorite(Number(recipe.id), e)}>
+                        {favorites.includes(Number(recipe.id)) ? <StarIcon /> : <StarBorderIcon />}
+                      </FavoriteButton>
+                      <CardMedia sx={{height:260}} component="img" src={recipe.image} style={{borderRadius:'10px'}} />
+                    </Grid>
                     <Grid size={8} sx={{p:2}}>
                       <CardHeader title={recipe.title} sx={{p:0}} style={{textTransform:'capitalize'}} />
                       <CardContent sx={{p:0}}>
@@ -150,6 +201,15 @@ const ListCard = styled(Card)(() => ({
   overflowY: 'auto',
   maxHeight: `calc(95vh - 80px)`,
 }));
+
+const FavoriteButton = styled(IconButton)(() => ({
+  color: 'yellow',
+  position: 'absolute',
+  top: '10px',
+  right: '10px',
+  zIndex: 1,
+  fontSize: '32px',
+}))
 
 const ItemCard = styled(Card)(() => ({
   margin: '10px',

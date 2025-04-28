@@ -84,8 +84,6 @@ export default function Recipe() {
 
     }
     else {
-      console.log('update',{formData})
-
       if(formData.file && formData.file.length > 0) {
         const uploadImageData = new FormData();
         uploadImageData.append('file', formData.file[0]);
@@ -106,8 +104,8 @@ export default function Recipe() {
         delete formData.file;
       }
 
-      await fetch(`https://680b406dd5075a76d98a61b3.mockapi.io/recipes`, {
-        method: 'POST',
+      await fetch(`https://680b406dd5075a76d98a61b3.mockapi.io/recipes/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
@@ -181,7 +179,7 @@ export default function Recipe() {
                     {errors.instructions && <span className="text-red-500">{`${errors.instructions.message}`}</span>}
                   </FormControl>
                   <Box className="flex flex-row gap-4" sx={{justifyContent: 'flex-end'}}>
-                  {!isNew && <Button type="submit" variant="contained" color="error" onClick={()=>setConfirmDelete(true)}>Delete</Button>}
+                  {!isNew && <Button variant="contained" color="error" onClick={()=>setConfirmDelete(true)}>Delete</Button>}
                   <Button type="submit" variant="contained" disabled={submitting}>Save</Button>
                   </Box>
                 </form>
