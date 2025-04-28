@@ -42,9 +42,6 @@ export default function Home() {
 
   useEffect(() => {
     fetchAllRecipes();
-    return () => {
-      clearAllRecipes();
-    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
@@ -125,7 +122,7 @@ export default function Home() {
         <SidebarItem>
           <SidebarItemHeader>Filter</SidebarItemHeader>
           <Card>
-            <CardHeader>Favorites</CardHeader>
+            <CardHeader title="Favorites" sx={{pb:0}} />
             <CardContent>
               <FormGroup>
                 <FormControlLabel control={<Checkbox value="Yes" checked={showFavorites === true} onClick={handleFavoriteFilter} />} label="Yes" />

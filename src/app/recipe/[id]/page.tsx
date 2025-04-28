@@ -1,21 +1,24 @@
 "use client";
-import { useParams, useRouter } from "next/navigation";
+import React from "react";
+import { useParams } from "next/navigation";
 import { useEffect, useState  } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { FieldValues, useForm } from "react-hook-form";
 
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, Grid, Input, InputLabel, styled } from "@mui/material";
 import ArrowBackIosOutlinedIcon from '@mui/icons-material/ArrowBackIosOutlined';
-import React from "react";
 import { setToast } from "../../../../slices/toastSlice";
-import { useDispatch } from "react-redux";
-import UploadFile from "@/app/components/upload-file";
+import { fetchRecipes, selectRecipes } from "../../../../slices/recipesSlice";
+import { AppDispatch } from "../../../../store/store";
 
+import UploadFile from "@/app/components/upload-file";
 
 export default function Recipe() {
   const { id } = useParams();
-  const router = useRouter();
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+
+  const recipes = useSelector(selectRecipes);
 
   const [,setRecipeError] = useState<string>('');
   const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
@@ -25,6 +28,13 @@ export default function Recipe() {
   const { register, handleSubmit, formState: {errors}, reset } = useForm();
 
   const isNew = id === 'new';
+
+  useEffect(() => {
+    if(recipes.length === 0) {
+      dispatch(fetchRecipes(''));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
 
   useEffect(() => {
     if(!isNew && id) {
@@ -134,6 +144,13 @@ export default function Recipe() {
     }
   };
 
+  const validateTitle = (value: string) => {
+    if (recipes.find((recipe) => recipe.title.toLowerCase() === value.toLowerCase())) {
+      return "Recipe already exists";
+    }
+    return true
+  }
+
 
   return (<React.Fragment>
     <FormContainer>
@@ -160,7 +177,7 @@ export default function Recipe() {
                   </FormControl>
                   <FormControl sx={{ mb: 2}}>
                     <InputLabel htmlFor="form-title" shrink={true}>Title</InputLabel>
-                    <Input id="form-title" type="text" {...register("title",{ required:"Title is required", })} />
+                    <Input id="form-title" type="text" {...register("title",{ required:"Title is required", validate: validateTitle  })} />
                     {errors.title && <span className="text-red-500">{`${errors.title.message}`}</span>}
                   </FormControl>
                   <FormControl sx={{ mb: 2}}>
