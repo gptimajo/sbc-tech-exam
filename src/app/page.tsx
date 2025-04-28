@@ -136,6 +136,7 @@ export default function Home() {
     <Grid size={9} style={{position: 'relative'}}>
       <Fab color="primary" style={{ position: 'fixed', top: '80px', right: '5px', }} onClick={() => router.push('/recipe/new')}><AddIcon /></Fab>
       {error && <ErrorCard>No Record Found</ErrorCard>}
+      {(!loading && sortedRecipes.length === 0) && <ErrorCard>No Record Found</ErrorCard>}
       {loading && <CircularProgress />}
       {!loading && (
         <ListCard>
@@ -154,9 +155,9 @@ export default function Home() {
                       <CardHeader title={recipe.title} sx={{p:0}} style={{textTransform:'capitalize'}} />
                       <CardContent sx={{p:0}}>
                         <Grid container>
-                        <Grid size={12} sx={{pb:2}}>
+                        <Description size={12} sx={{pb:2}}>
                           {recipe.description}
-                        </Grid>
+                        </Description>
                         <Grid size={6}>
                           Added by: {recipe.name}
                         </Grid>
@@ -214,6 +215,15 @@ const ItemCard = styled(Card)(() => ({
   borderRadius: '10px',
   color: '#000000',
   maxHeight: '260px'
+}));
+
+const Description = styled(Grid)(() => ({
+  display: '-webkit-box',
+  '-webkitLineClamp': '5',
+  '-webkitBoxOrient': 'vertical',
+  overflow: 'hidden',
+  paddingBottom: '0px !important',
+  marginBottom: '16px',
 }));
 
 const ErrorCard = styled(Card)(() => ({
