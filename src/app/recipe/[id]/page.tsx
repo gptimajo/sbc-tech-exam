@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import { useEffect, useState  } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -15,6 +16,8 @@ import UploadFile from "@/app/components/upload-file";
 
 export default function Recipe() {
   const { id } = useParams();
+
+  const router = useRouter();
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -136,8 +139,7 @@ export default function Recipe() {
         method: 'DELETE',
       })
       .then(() => {
-        dispatch(setToast("Recipe has been deleted."))
-        setConfirmDelete(false);
+        dispatch(setToast("Recipe has been deleted."));
         router.push('/');
       })
       .catch(() => setRecipeError("Error deleting recipe"));
